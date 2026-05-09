@@ -1,0 +1,10 @@
+# Binary artifacts are intentionally excluded from pull requests.
+*.jar
+*.apk
+*.zip
+*.png
+*.webp
+*.keystore
+
+# Keep Gradle Wrapper scripts/properties only; do not commit the wrapper JAR.
+android-app/gradle/wrapper/gradle-wrapper.jar

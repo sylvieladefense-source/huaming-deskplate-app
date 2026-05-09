@@ -2,6 +2,6 @@
     <string name="app_name">华鸣智能桌牌</string>
     <string name="deskplate_url">http://192.168.4.1</string>
     <string name="connection_error_title">无法连接桌牌</string>
-    <string name="connection_error_message">请连接 Huaming-Deskplate WiFi 后重试。</string>
+    <string name="connection_error_message">请先连接 Huaming-Deskplate WiFi 后重试</string>
     <string name="retry">重试</string>
 </resources>

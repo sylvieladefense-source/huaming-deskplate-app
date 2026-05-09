@@ -1,0 +1,6 @@
+<resources>
+    <color name="error_background">#111827</color>
+    <color name="error_text">#FFFFFF</color>
+    <color name="error_secondary_text">#D1D5DB</color>
+    <color name="retry_button">#2563EB</color>
+</resources>

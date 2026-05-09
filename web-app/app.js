@@ -3,6 +3,9 @@ const CANVAS_HEIGHT = 416;
 const BIN_SIZE = (CANVAS_WIDTH * CANVAS_HEIGHT) / 4;
 const UPLOAD_URL = 'http://192.168.4.1/upload';
 
+// Firmware protocol codes consumed by Color_get():
+// 0 -> white, 1 -> yellow, 2 -> red, 3 -> black. The display driver
+// remaps these protocol codes to the panel-native 2-bit values before SPI.
 const EPD_PALETTE = [
   { name: 'white', code: 0, rgb: [255, 255, 255], css: '#ffffff' },
   { name: 'yellow', code: 1, rgb: [255, 212, 0], css: '#ffd400' },
@@ -155,6 +158,20 @@ function nearestPaletteCode(r, g, b, alpha) {
   return nearest.code;
 }
 
+function getUploadMode() {
+  const targetUrl = new URL(UPLOAD_URL, window.location.href);
+
+  if (window.location.protocol === 'file:' || window.location.origin !== targetUrl.origin) {
+    return 'no-cors';
+  }
+
+  return 'cors';
+}
+
+function isOpaqueUpload(response) {
+  return response.type === 'opaque';
+}
+
 function canvasToBin() {
   const { data } = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   const bin = new Uint8Array(BIN_SIZE);
@@ -196,14 +213,19 @@ async function uploadToDeskplate() {
   try {
     const response = await fetch(UPLOAD_URL, {
       method: 'POST',
+      mode: getUploadMode(),
       body: formData,
     });
 
-    if (!response.ok) {
+    if (!isOpaqueUpload(response) && !response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
 
-    setStatus('上传成功，桌牌正在刷新墨水屏。');
+    if (isOpaqueUpload(response)) {
+      setStatus('上传请求已发送，桌牌收到后会刷新墨水屏。');
+    } else {
+      setStatus('上传成功，桌牌正在刷新墨水屏。');
+    }
   } catch (error) {
     setStatus(`上传失败：${error.message}。请确认手机已连接设备热点，地址为 192.168.4.1。`, 'error');
   } finally {

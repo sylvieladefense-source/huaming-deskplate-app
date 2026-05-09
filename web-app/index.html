@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#00c853">
+  <title>华鸣智能桌牌</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero-card" aria-labelledby="app-title">
+      <div class="brand-mark" aria-hidden="true">
+        <span class="brand-pulse"></span>
+        <span>HM</span>
+      </div>
+      <div>
+        <p class="eyebrow">ESP8266 · 四色墨水屏</p>
+        <h1 id="app-title">华鸣智能桌牌</h1>
+        <p class="subtitle">手机端实时生成 240×416 桌牌图像，并上传到设备热点。</p>
+      </div>
+    </section>
+
+    <section class="panel preview-panel" aria-labelledby="preview-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Live Preview</p>
+          <h2 id="preview-title">四色预览</h2>
+        </div>
+        <span class="size-badge">240×416</span>
+      </div>
+
+      <div class="canvas-frame">
+        <canvas id="previewCanvas" width="240" height="416" aria-label="桌牌图像预览"></canvas>
+      </div>
+
+      <div class="palette" aria-label="墨水屏四色色板">
+        <span><i class="swatch swatch-white"></i>白</span>
+        <span><i class="swatch swatch-black"></i>黑</span>
+        <span><i class="swatch swatch-red"></i>红</span>
+        <span><i class="swatch swatch-yellow"></i>黄</span>
+      </div>
+    </section>
+
+    <section class="panel form-panel" aria-labelledby="form-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Deskplate Data</p>
+          <h2 id="form-title">桌牌信息</h2>
+        </div>
+      </div>
+
+      <form id="deskplateForm" autocomplete="off">
+        <label>
+          <span>姓名</span>
+          <input id="nameInput" name="name" type="text" maxlength="12" placeholder="请输入姓名" value="张华鸣">
+        </label>
+
+        <label>
+          <span>公司</span>
+          <input id="companyInput" name="company" type="text" maxlength="28" placeholder="请输入公司" value="华鸣智能科技有限公司">
+        </label>
+
+        <label>
+          <span>职位</span>
+          <input id="titleInput" name="title" type="text" maxlength="22" placeholder="请输入职位" value="产品总监">
+        </label>
+
+        <button id="uploadButton" class="primary-button" type="button">
+          <span class="button-glow" aria-hidden="true"></span>
+          上传到桌牌
+        </button>
+      </form>
+
+      <div class="status-card" role="status" aria-live="polite">
+        <span id="statusDot" class="status-dot"></span>
+        <p id="statusText">将手机连接到 Huaming-Deskplate 热点后点击上传。</p>
+      </div>
+
+      <dl class="tech-list">
+        <div>
+          <dt>上传地址</dt>
+          <dd>http://192.168.4.1/upload</dd>
+        </div>
+        <div>
+          <dt>字段名</dt>
+          <dd>image</dd>
+        </div>
+        <div>
+          <dt>Bin 大小</dt>
+          <dd><span id="binSizeText">24960</span> bytes</dd>
+        </div>
+      </dl>
+    </section>
+  </main>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

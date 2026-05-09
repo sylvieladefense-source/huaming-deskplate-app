@@ -4,6 +4,7 @@
 
 #include "Display_EPD_W21_spi.h"
 #include "Display_EPD_W21.h"
+#include "WebAssets.h"
 
 ESP8266WebServer server(80);
 
@@ -42,6 +43,9 @@ void setup() {
   Serial.println(WiFi.softAPIP());
 
   server.on("/", HTTP_GET, handleRoot);
+  server.on("/index.html", HTTP_GET, handleRoot);
+  server.on("/style.css", HTTP_GET, handleStyleCss);
+  server.on("/app.js", HTTP_GET, handleAppJs);
   server.on("/upload", HTTP_POST, handleUploadDone, handleUpload);
 
   server.begin();
@@ -65,27 +69,21 @@ void loop() {
 #endif
 }
 
-void handleRoot() {
-  String html = "";
-  html += "<!DOCTYPE html><html><head><meta charset='utf-8'>";
-  html += "<title>Huaming Deskplate</title>";
-  html += "<style>";
-  html += "body{font-family:Arial;margin:30px;background:#f7f7f7;}";
-  html += ".box{background:white;padding:24px;border-radius:12px;max-width:420px;margin:auto;}";
-  html += "h2{color:#111;} input,button{width:100%;padding:12px;margin-top:12px;}";
-  html += "button{background:#111;color:white;border:0;border-radius:8px;}";
-  html += "</style></head><body>";
-  html += "<div class='box'>";
-  html += "<h2>华鸣智能桌牌</h2>";
-  html += "<p>上传 416×240 四色墨水屏 .bin 文件</p>";
-  html += "<form method='POST' action='/upload' enctype='multipart/form-data'>";
-  html += "<input type='file' name='image'>";
-  html += "<button type='submit'>上传并刷新墨水屏</button>";
-  html += "</form>";
-  html += "<p>WiFi: Huaming-Deskplate<br>密码: 12345678</p>";
-  html += "</div></body></html>";
+void sendProgmemAsset(const char* content, const char* contentType) {
+  server.sendHeader("Cache-Control", "no-cache");
+  server.send_P(200, contentType, content);
+}
 
-  server.send(200, "text/html", html);
+void handleRoot() {
+  sendProgmemAsset(INDEX_HTML, "text/html; charset=utf-8");
+}
+
+void handleStyleCss() {
+  sendProgmemAsset(STYLE_CSS, "text/css; charset=utf-8");
+}
+
+void handleAppJs() {
+  sendProgmemAsset(APP_JS, "application/javascript; charset=utf-8");
 }
 
 void handleUpload() {

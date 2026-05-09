@@ -1,0 +1,65 @@
+#!/usr/bin/env sh
+
+# Text-only Gradle launcher for this repository.
+# The binary Gradle wrapper JAR is intentionally not tracked.
+
+set -eu
+
+APP_HOME=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+PROPERTIES_FILE="$APP_HOME/gradle/wrapper/gradle-wrapper.properties"
+
+if [ ! -f "$PROPERTIES_FILE" ]; then
+  echo "Gradle wrapper properties not found: $PROPERTIES_FILE" >&2
+  exit 1
+fi
+
+if command -v python3 >/dev/null 2>&1; then
+  DISTRIBUTION_URL=$(python3 - "$PROPERTIES_FILE" <<'PY'
+import sys
+from pathlib import Path
+
+for line in Path(sys.argv[1]).read_text(encoding="utf-8").splitlines():
+    line = line.strip()
+    if line.startswith("distributionUrl="):
+        print(line.split("=", 1)[1].replace("\\:", ":"))
+        break
+PY
+)
+else
+  DISTRIBUTION_URL=$(sed -n 's/^distributionUrl=//p' "$PROPERTIES_FILE" | sed 's/\\:/:/g')
+fi
+
+if [ -z "$DISTRIBUTION_URL" ]; then
+  echo "distributionUrl is missing in $PROPERTIES_FILE" >&2
+  exit 1
+fi
+
+GRADLE_USER_HOME=${GRADLE_USER_HOME:-"$HOME/.gradle"}
+DIST_NAME=$(basename "$DISTRIBUTION_URL" .zip)
+DIST_DIR="$GRADLE_USER_HOME/wrapper/dists/$DIST_NAME"
+ZIP_FILE="$DIST_DIR/$DIST_NAME.zip"
+GRADLE_BIN="$DIST_DIR/$DIST_NAME/bin/gradle"
+
+if [ ! -x "$GRADLE_BIN" ]; then
+  mkdir -p "$DIST_DIR"
+  if [ ! -f "$ZIP_FILE" ]; then
+    echo "Downloading $DISTRIBUTION_URL" >&2
+    if command -v curl >/dev/null 2>&1; then
+      curl -fL --retry 3 --connect-timeout 20 -o "$ZIP_FILE" "$DISTRIBUTION_URL"
+    elif command -v wget >/dev/null 2>&1; then
+      wget -O "$ZIP_FILE" "$DISTRIBUTION_URL"
+    else
+      echo "Either curl or wget is required to download Gradle." >&2
+      exit 1
+    fi
+  fi
+  TMP_DIR="$DIST_DIR/.tmp"
+  rm -rf "$TMP_DIR"
+  mkdir -p "$TMP_DIR"
+  unzip -q "$ZIP_FILE" -d "$TMP_DIR"
+  rm -rf "$DIST_DIR/$DIST_NAME"
+  mv "$TMP_DIR/$DIST_NAME" "$DIST_DIR/$DIST_NAME"
+  rmdir "$TMP_DIR"
+fi
+
+exec "$GRADLE_BIN" "$@"

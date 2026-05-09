@@ -32,11 +32,11 @@ android-app/app/build/outputs/apk/debug/app-debug.apk
 
 ## 命令行构建调试 APK
 
-命令行方式需要本机已安装 Gradle（建议 8.13 或更高版本）并配置 Android SDK。然后在仓库根目录执行：
+命令行方式需要本机已配置 Android SDK。仓库保留文本版 `gradlew` 启动脚本和 `gradle-wrapper.properties`，但不提交二进制 `gradle-wrapper.jar`。在仓库根目录执行：
 
 ```bash
 cd android-app
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 
 输出 APK：
@@ -71,7 +71,7 @@ keyPassword=你的密钥密码
 当前工程默认只配置了 debug 构建。如需正式发布，可在 `app/build.gradle` 中增加 `signingConfigs.release` 和 `buildTypes.release` 后，在 `android-app` 目录执行：
 
 ```bash
-gradle assembleRelease
+./gradlew assembleRelease
 ```
 
 ## 安装到手机
@@ -86,13 +86,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 4. 启动“华鸣智能桌牌”。如果提示无法连接，请确认手机已连接 `Huaming-Deskplate` WiFi，且设备服务地址为 `http://192.168.4.1`。
 
-## 可选：生成 Gradle Wrapper
+## Gradle Wrapper 文件说明
 
-如果团队希望统一 Gradle 版本，可在网络可访问 `services.gradle.org` 的环境中执行：
+仓库保留以下文本文件，方便本地和 CI 统一使用 Gradle 8.13：
 
-```bash
-cd android-app
-gradle wrapper --gradle-version 8.13 --distribution-type bin
-```
+- `gradlew`
+- `gradlew.bat`
+- `gradle/wrapper/gradle-wrapper.properties`
 
-之后即可用 `./gradlew assembleDebug` 替代 `gradle assembleDebug`。
+为避免提交二进制文件，`gradle/wrapper/gradle-wrapper.jar` 不纳入版本控制。

@@ -34,27 +34,46 @@ public class MainActivity extends Activity {
         deskplateUrl = getString(R.string.deskplate_url);
         enableFullscreen();
         setContentView(createContentView());
-        configureWebView();
-        loadDeskplate();
+        if (initializeWebView()) {
+            loadDeskplate();
+        } else {
+            showConnectionError();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         enableFullscreen();
-        webView.onResume();
+        if (webView != null) {
+            try {
+                webView.onResume();
+            } catch (RuntimeException ignored) {
+                showConnectionError();
+            }
+        }
     }
 
     @Override
     protected void onPause() {
-        webView.onPause();
+        if (webView != null) {
+            try {
+                webView.onPause();
+            } catch (RuntimeException ignored) {
+                showConnectionError();
+            }
+        }
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
         if (webView != null) {
-            webView.destroy();
+            try {
+                webView.destroy();
+            } catch (RuntimeException ignored) {
+                // Avoid crashing during Activity teardown if the platform WebView is unhealthy.
+            }
         }
         super.onDestroy();
     }
@@ -74,13 +93,6 @@ public class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
         ));
-
-        webView = new WebView(this);
-        webView.setLayoutParams(new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-        ));
-        root.addView(webView);
 
         errorView = createErrorView();
         errorView.setVisibility(View.GONE);
@@ -138,6 +150,35 @@ public class MainActivity extends Activity {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
+    private boolean initializeWebView() {
+        WebView candidate = null;
+        try {
+            candidate = new WebView(this);
+            candidate.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+            ));
+
+            webView = candidate;
+            configureWebView();
+
+            ViewGroup root = (ViewGroup) errorView.getParent();
+            root.addView(webView, 0);
+            return true;
+        } catch (RuntimeException ignored) {
+            if (candidate != null) {
+                try {
+                    candidate.destroy();
+                } catch (RuntimeException destroyIgnored) {
+                    // Keep the native error screen visible instead of crashing.
+                }
+            }
+            webView = null;
+            return false;
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
     private void configureWebView() {
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -175,19 +216,36 @@ public class MainActivity extends Activity {
     }
 
     private void loadDeskplate() {
-        errorView.setVisibility(View.GONE);
-        webView.setVisibility(View.VISIBLE);
-        webView.loadUrl(deskplateUrl);
+        if (webView == null && !initializeWebView()) {
+            showConnectionError();
+            return;
+        }
+
+        try {
+            errorView.setVisibility(View.GONE);
+            webView.setVisibility(View.VISIBLE);
+            webView.loadUrl(deskplateUrl);
+        } catch (RuntimeException ignored) {
+            showConnectionError();
+        }
     }
 
     private void showWebView() {
-        webView.setVisibility(View.VISIBLE);
+        if (webView != null) {
+            webView.setVisibility(View.VISIBLE);
+        }
         errorView.setVisibility(View.GONE);
     }
 
     private void showConnectionError() {
-        webView.stopLoading();
-        webView.setVisibility(View.GONE);
+        if (webView != null) {
+            try {
+                webView.stopLoading();
+            } catch (RuntimeException ignored) {
+                // Keep the native error screen visible instead of crashing.
+            }
+            webView.setVisibility(View.GONE);
+        }
         errorView.setVisibility(View.VISIBLE);
     }
 
